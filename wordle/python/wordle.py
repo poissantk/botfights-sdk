@@ -121,13 +121,15 @@ def get_play(bot, history):
     response = bot(state)
     return response
 
-
 def calc_score(secret, guess, wordlist):
     if not guess in wordlist:
         return '0' * len(secret)
+    return evaluate_word(secret, guess)
 
-    a = ['0'] * len(secret)
-    secret_arr = [char for char in secret]
+
+def evaluate_word(answer, guess):
+    a = ['0'] * len(answer)
+    secret_arr = [char for char in answer]
 
     # First pass of the guess, to find any that match exactly
     for i, ch in enumerate(secret_arr):
