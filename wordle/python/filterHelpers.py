@@ -1,4 +1,3 @@
-
 # string input list database
 def contains(input, database):
     howManyContainInput = 0
@@ -63,8 +62,8 @@ def filterNotInPlace(input, database, place):
             newDatabase.append(word)
     return newDatabase
 
-def filter_words(feedback, guess, possible):
 
+def filter_words(feedback, guess, possible):
     for number in range(len(guess) - 1):
         if feedback[number] == '2':
             possible = filterContains(guess[number], possible)
