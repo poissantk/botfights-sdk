@@ -18,11 +18,6 @@ To test against 1000 random words in wordlist "wordlist.txt":
 
    $ python wordle.py bot wordlist.txt sample-bot.play 1000
 
-To test against 1000 random words in wordlist "wordlist.txt",
-but using secrets from secrets.txt:
-
-   $ python wordle.py bot wordlist.txt sample-bot.play 1000 secrets.txt
-
 To play your bot on botfights.ai in the "test" event, where XXXX and YYYYYYYYY
 are your credentials:
 
@@ -121,11 +116,50 @@ def get_play(bot, history):
     response = bot(state)
     return response
 
+
+def calc_katie_score(secret, guess):
+    fn_wordlist = 'wordlist.txt'
+    actual_wordlist = load_wordlist(fn_wordlist)
+    if not guess in actual_wordlist:
+        return '0' * len(secret)
+
+    a = ['0'] * len(secret)
+    secret_arr = [char for char in secret]
+
+    # First pass of the guess, to find any that match exactly
+    for i, ch in enumerate(secret_arr):
+        g = '-'
+        if i < len(guess):
+            g = guess[i]
+        if ch == g:
+            a[i] = '3'
+            secret_arr[i] = ' '
+
+    # Second pass to score the rest, without re-using the secret letters more than once
+    for i, ch in enumerate(secret_arr):
+        if a[i] == '3':
+            continue
+        g = '-'
+        if i < len(guess):
+            g = guess[i]
+
+        if g in secret_arr:
+            idx = secret_arr.index(g)
+            secret_arr[idx] = ' '
+            a[i] = '2'
+        else:
+            a[i] = '1'
+
+    return ''.join(a)
+
+
 def calc_score(secret, guess, wordlist):
     if not guess in wordlist:
         return '0' * len(secret)
     return evaluate_word(secret, guess)
 
+    a = ['0'] * len(secret)
+    secret_arr = [char for char in secret]
 
 def evaluate_word(answer, guess):
     a = ['0'] * len(answer)
@@ -158,6 +192,23 @@ def evaluate_word(answer, guess):
     return ''.join(a)
 
 
+def play_katie_word(bot, secret, wordlist):
+    guess = '-' * len(secret)
+    score = calc_katie_score(secret, guess)
+    history = [(guess, score), ]
+    guess_num = 1
+    while 1:
+        guess = get_play(bot, history)
+        score = calc_katie_score(secret, guess)
+        history.append((guess, score))
+        sys.stdout.write('PLAY\t%d\t%s\t%s\t%s\n' % (guess_num, secret, guess, score))
+        if guess == secret:
+            return guess_num
+        if guess_num == len(wordlist):
+            return guess_num
+        guess_num += 1
+
+
 def play_word(bot, secret, wordlist):
     guess = '-' * len(secret)
     score = calc_score(secret, guess, wordlist)
@@ -173,6 +224,41 @@ def play_word(bot, secret, wordlist):
         if guess_num == len(wordlist):
             return guess_num
         guess_num += 1
+
+
+def play_katie_bots(bots, wordlist, n):
+    total_guesses = {}
+    total_time = {}
+    last_guesses = {}
+    bot_keys = sorted(list(bots.keys()))
+    for i in bot_keys:
+        total_guesses[i] = 0
+        total_time[i] = 0.0
+    wordlist_as_list = sorted(list(wordlist))
+    num_words = len(wordlist_as_list)
+    if 0 == n:
+        count = len(wordlist)
+        get_random().shuffle(wordlist_as_list)
+    else:
+        count = num_words
+    for i in range(count):
+        if 0 == n:
+            word = wordlist_as_list[i]
+        else:
+            word = wordlist_as_list[i]
+        for bot in bot_keys:
+            t0 = time.time()
+            guesses = play_katie_word(bots[bot], word, wordlist)
+            last_guesses[bot] = guesses
+            t = time.time() - t0
+            total_guesses[bot] += guesses
+            total_time[bot] += t
+            i += 1
+            sys.stdout.write('WORD\t%d\t%s\t%s\t%d\t%.3f\t%.3f\t%.3f\n' % (i, word, bot, guesses, total_guesses[bot] / float(i), t, total_time[bot] / float(i)))
+        if 1 != len(bots):
+            bots_sorted = sorted(bot_keys, key = lambda x: total_guesses[x])
+            sys.stdout.write('BOTS\t%d\t%s\t%s\n' % (i, word, '\t'.join(map(lambda x: '%s:%d,%.3f' % (x, last_guesses[x], total_guesses[x] / float(i)), bots_sorted))))
+    return n
 
 
 def play_bots(bots, wordlist, wordlist_secrets, n):
@@ -273,14 +359,9 @@ def main(argv):
             wordlist = load_wordlist(argv[1])
         else:
             wordlist = load_wordlist('wordlist.txt')
-        wordlist_secrets = wordlist
-        if 2 < len(argv):
-            wordlist_secrets = load_wordlist(argv[2])
-        else:
-            wordlist_secrets = load_wordlist('wordlist-secrets.txt')
-        secret = get_random().choice(list(wordlist_secrets))
-        if 4 <= len(argv):
-            secret = argv[3]
+        secret = get_random().choice(list(wordlist))
+        if 2 == len(argv):
+            secret = argv[2]
         x = play_human(secret, wordlist)
         return x
     elif 'help' == c:
@@ -304,6 +385,27 @@ def main(argv):
         wordlist = load_wordlist(fn_wordlist)
         wordlist_secrets = load_wordlist(fn_wordlist_secrets)
         x = play_bots({argv[2]: bot}, wordlist, wordlist_secrets, n)
+        return x
+    elif 'katiebot' == c:
+        fn_wordlist = "katieswordlist.txt"
+        bot = load_bot(argv[2])
+        n = 0
+        if 4 <= len(argv):
+            n = int(argv[3])
+        if 5 <= len(argv):
+            get_random().seed(argv[4])
+        wordlist = load_wordlist(fn_wordlist)
+        x = play_katie_bots({argv[2]: bot}, wordlist, n)
+        return x
+    elif 'bots' == c:
+        fn_wordlist = argv[1]
+        n = int(argv[2])
+        get_random().seed(argv[3])
+        bots = {}
+        for i in argv[4:]:
+            bots[i] = load_bot(i)
+        wordlist = load_wordlist(fn_wordlist)
+        x = play_bots(bots, wordlist, n)
         return x
     elif 'word' == c:
         fn_wordlist = argv[1]
