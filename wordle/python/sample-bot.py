@@ -61,6 +61,3 @@ def play(state):
 
     guess = random.choice(best_options)
     return guess
-
-
-print(filter_words("33113", "toney", filter_words("11211", "arose", get_wordlist())))

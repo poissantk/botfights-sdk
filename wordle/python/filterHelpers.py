@@ -68,12 +68,11 @@ def filterNotInPlace(input, database, place):
 
 
 def filter_words(feedback, guess, possible):
-    for number in range(len(guess) - 1):
+    for number in range(len(guess)):
         if feedback[number] == '2':
             possible = filterContains(guess[number], possible)
             possible = filterNotInPlace(guess[number], possible, number)
         elif feedback[number] == '3':
-            # possible = filter(lambda possible_word:  , possible)
             possible = filterInPlace(guess[number], possible, number)
         elif (guess[number] not in guess[0:number]) & (feedback[number] == '1'):
             placesWithCurrentLetter = []
@@ -129,15 +128,8 @@ def matrix_start_word_approach2(word_list):
             else:
                 eval_to_possible_answers[eval_result].append(answer)
         highest_filter_count = max([len(words_for_this_eval) for words_for_this_eval in eval_to_possible_answers.values()])
-        # print(guess)
         if highest_filter_count in remaining_words_after_guess:
             remaining_words_after_guess[highest_filter_count].append(guess)
         else:
             remaining_words_after_guess[highest_filter_count] = [guess]
     return remaining_words_after_guess[min(remaining_words_after_guess.keys())]
-
-
-# print(matrix_start_word_approach(["hello", "hello", "hello"]))
-
-# print(matrix_start_word_approach2(filter_words("11111", "arose", get_word_list())))
-#print(matrix_start_word_approach(get_word_list()))
