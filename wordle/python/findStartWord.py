@@ -12,7 +12,7 @@ def matrix_start_word_approach(word_list):
         guess_filter_count = []
         for answer in word_list:
             eval_result = evaluate_word(answer, guess)
-            guess_filter_count.append(len(filter_words(eval_result, guess, word_list)))
+            guess_filter_count.append(7)
         highest_filter_count = max(guess_filter_count)
         if highest_filter_count in remaining_words_after_guess:
             remaining_words_after_guess[highest_filter_count].append(guess)
@@ -21,4 +21,5 @@ def matrix_start_word_approach(word_list):
     return remaining_words_after_guess[min(remaining_words_after_guess.keys())]
 
 # print(filter_words("words", "aesir", get_word_list()))
-print(matrix_start_word_approach(get_word_list()))
+
+# print(matrix_start_word_approach(["word", "word", "word"]))

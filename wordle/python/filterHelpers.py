@@ -1,3 +1,7 @@
+from wordle import evaluate_word
+from textFileProcessing import get_word_list
+
+
 # string input list database
 def contains(input, database):
     howManyContainInput = 0
@@ -69,6 +73,7 @@ def filter_words(feedback, guess, possible):
             possible = filterContains(guess[number], possible)
             possible = filterNotInPlace(guess[number], possible, number)
         elif feedback[number] == '3':
+            # possible = filter(lambda possible_word:  , possible)
             possible = filterInPlace(guess[number], possible, number)
         elif (guess[number] not in guess[0:number]) & (feedback[number] == '1'):
             placesWithCurrentLetter = []
@@ -87,3 +92,52 @@ def filter_words(feedback, guess, possible):
                         # filter other places that don't have the current letter
                         possible = filterNotInPlace(guess[number], possible, letterNumberToFilter)
     return possible
+
+
+def matrix_start_word_approach(word_list):
+    # this will be a list of lists, where the index is the count and the value
+    # is an array of the words with that count
+    remaining_words_after_guess = {}
+
+    for guess in word_list:
+        guess_filter_count = []
+        seen_vals = set([])
+        for answer in word_list:
+            eval_result = evaluate_word(answer, guess)
+            if eval_result not in seen_vals:
+                guess_filter_count.append(len(filter_words(eval_result, guess, word_list)))
+                seen_vals.add(eval_result)
+        highest_filter_count = max(guess_filter_count)
+        if highest_filter_count in remaining_words_after_guess:
+            remaining_words_after_guess[highest_filter_count].append(guess)
+        else:
+            remaining_words_after_guess[highest_filter_count] = [guess]
+    return remaining_words_after_guess[min(remaining_words_after_guess.keys())]
+
+
+def matrix_start_word_approach2(word_list):
+    # this will be a list of lists, where the index is the count and the value
+    # is an array of the words with that count
+    remaining_words_after_guess = {}
+
+    for guess in word_list:
+        eval_to_possible_answers = {}
+        for answer in word_list:
+            eval_result = evaluate_word(answer, guess)
+            if eval_result not in eval_to_possible_answers:
+                eval_to_possible_answers[eval_result] = [answer]
+            else:
+                eval_to_possible_answers[eval_result].append(answer)
+        highest_filter_count = max([len(words_for_this_eval) for words_for_this_eval in eval_to_possible_answers.values()])
+        # print(guess)
+        if highest_filter_count in remaining_words_after_guess:
+            remaining_words_after_guess[highest_filter_count].append(guess)
+        else:
+            remaining_words_after_guess[highest_filter_count] = [guess]
+    return remaining_words_after_guess[min(remaining_words_after_guess.keys())]
+
+
+# print(matrix_start_word_approach(["hello", "hello", "hello"]))
+
+# print(matrix_start_word_approach2(filter_words("11111", "arose", get_word_list())))
+#print(matrix_start_word_approach(get_word_list()))
