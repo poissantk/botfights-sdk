@@ -67,7 +67,13 @@ def filterNotInPlace(input, database, place):
     return newDatabase
 
 
+# filters the list for strings with the letter duplicated more times than the count allows for
+def filter_words_with_dup_letter(word_list, letter, how_many_times_can_it_be_present):
+    return list(filter(lambda word: word.count(letter) <= how_many_times_can_it_be_present, word_list))
+
+
 def filter_words(feedback, guess, possible):
+    duplicate_letters_filtered = set([])
     for number in range(len(guess)):
         if feedback[number] == '2':
             possible = filterContains(guess[number], possible)
@@ -90,6 +96,18 @@ def filter_words(feedback, guess, possible):
                     if letterNumberToFilter not in placesWithCurrentLetter:
                         # filter other places that don't have the current letter
                         possible = filterNotInPlace(guess[number], possible, letterNumberToFilter)
+        ## if we come across a 1 at this point, it means there's duplicate letters
+        elif (feedback[number] == '1') and guess[number] not in duplicate_letters_filtered:
+            duplicate_letters_filtered.add(guess[number])
+            placesWithCurrentLetter = []
+            for letterNumber in range(5):
+                if guess[letterNumber] == guess[number]:
+                    placesWithCurrentLetter.append(letterNumber)
+            how_much_is_letter_present = len(placesWithCurrentLetter) - [feedback[index] for index in
+                                                                         placesWithCurrentLetter].count('1')
+            possible = filter_words_with_dup_letter(possible, guess[number], how_much_is_letter_present)
+            possible = filterNotInPlace(guess[number], possible, number)
+
     return possible
 
 
@@ -127,9 +145,34 @@ def matrix_start_word_approach2(word_list):
                 eval_to_possible_answers[eval_result] = [answer]
             else:
                 eval_to_possible_answers[eval_result].append(answer)
-        highest_filter_count = max([len(words_for_this_eval) for words_for_this_eval in eval_to_possible_answers.values()])
+        highest_filter_count = max(
+            [len(words_for_this_eval) for words_for_this_eval in eval_to_possible_answers.values()])
         if highest_filter_count in remaining_words_after_guess:
             remaining_words_after_guess[highest_filter_count].append(guess)
         else:
             remaining_words_after_guess[highest_filter_count] = [guess]
     return remaining_words_after_guess[min(remaining_words_after_guess.keys())]
+
+
+def matrix_start_word_approach3(word_list):
+    # this will be a list of lists, where the index is the count and the value
+    # is an array of the words with that count
+    remaining_words_after_guess = {}
+
+    for guess in word_list:
+        eval_to_possible_answers = {}
+        for answer in word_list:
+            eval_result = evaluate_word(answer, guess)
+            if eval_result not in eval_to_possible_answers:
+                eval_to_possible_answers[eval_result] = [answer]
+            else:
+                eval_to_possible_answers[eval_result].append(answer)
+        highest_filter_count = sum(
+            [len(words_for_this_eval) for words_for_this_eval in eval_to_possible_answers.values()]) / len(eval_to_possible_answers.values())
+        if highest_filter_count in remaining_words_after_guess:
+            remaining_words_after_guess[highest_filter_count].append(guess)
+        else:
+            remaining_words_after_guess[highest_filter_count] = [guess]
+    return remaining_words_after_guess[min(remaining_words_after_guess.keys())]
+
+# print(matrix_start_word_approach3(get_word_list()))
