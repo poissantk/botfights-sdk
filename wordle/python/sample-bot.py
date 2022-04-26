@@ -71,6 +71,25 @@ def play(state):
                 bestWord = word
         return bestWord
 
+    if (state[-5:].count('3') == 3) & (state[-5:].count('1') == 2) & (len(possible) > 2):
+        placeOfFirstOne = state[-5:].find('1')
+        placeOfSecondOne = state[-5:].rfind('1')
+        possibleLettersInTheOnePosition = []
+        for word in possible:
+            possibleLettersInTheOnePosition.append(word[placeOfFirstOne])
+            possibleLettersInTheOnePosition.append(word[placeOfSecondOne])
+        bestWord = 0
+        maxWantedLettersInWord = 0
+        for word in og_wordlist:
+            lettersInWord = 0
+            for letter in possibleLettersInTheOnePosition:
+                if word.find(letter) != -1:
+                    lettersInWord += 1
+            if lettersInWord > maxWantedLettersInWord:
+                maxWantedLettersInWord = lettersInWord
+                bestWord = word
+        return bestWord
+
     first_guess_feedback = previous_guesses[1].split(":")[1]
 
     if len(previous_guesses) == 2 and first_guess_feedback in second_guess_cache:
