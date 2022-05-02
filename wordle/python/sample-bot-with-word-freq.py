@@ -4,7 +4,7 @@
 
 
 import random
-from filterHelpers import filter_words, matrix_start_word_approach3, matrix_start_word_approach2
+from filterHelpers import filter_words, matrix_best_set_of_words, find_most_frequent
 
 FN_WORDLIST = 'wordlist.txt'
 
@@ -93,11 +93,11 @@ def play(state):
     first_guess_feedback = previous_guesses[1].split(":")[1]
 
     if len(previous_guesses) == 2 and first_guess_feedback in second_guess_cache:
-        return random.choice(second_guess_cache[first_guess_feedback])
+        return find_most_frequent(second_guess_cache[first_guess_feedback])
 
-    best_options = matrix_start_word_approach3(possible)
+    best_options = matrix_best_set_of_words(possible, 10)
 
     if len(previous_guesses) == 2 and first_guess_feedback not in second_guess_cache:
         second_guess_cache[first_guess_feedback] = best_options
 
-    return random.choice(best_options)
+    return find_most_frequent(best_options)

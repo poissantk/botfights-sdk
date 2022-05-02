@@ -1,5 +1,5 @@
 from wordle import evaluate_word
-from textFileProcessing import get_word_list
+from textFileProcessing import get_word_frequencies
 
 
 # string input list database
@@ -167,12 +167,45 @@ def matrix_start_word_approach3(word_list):
                 eval_to_possible_answers[eval_result] = [answer]
             else:
                 eval_to_possible_answers[eval_result].append(answer)
-        highest_filter_count = sum(
-            [len(words_for_this_eval) for words_for_this_eval in eval_to_possible_answers.values()]) / len(eval_to_possible_answers.values())
-        if highest_filter_count in remaining_words_after_guess:
-            remaining_words_after_guess[highest_filter_count].append(guess)
+        avg_filter_count = sum(
+            [len(words_for_this_eval) for words_for_this_eval in eval_to_possible_answers.values()]) / len(
+            eval_to_possible_answers.values())
+        if avg_filter_count in remaining_words_after_guess:
+            remaining_words_after_guess[avg_filter_count].append(guess)
         else:
-            remaining_words_after_guess[highest_filter_count] = [guess]
+            remaining_words_after_guess[avg_filter_count] = [guess]
     return remaining_words_after_guess[min(remaining_words_after_guess.keys())]
 
-# print(matrix_start_word_approach3(get_word_list()))
+
+def matrix_best_set_of_words(word_list, best_x_words):
+    remaining_words_after_guess = {}
+    for guess in word_list:
+        eval_to_possible_answers = {}
+        for answer in word_list:
+            eval_result = evaluate_word(answer, guess)
+            if eval_result not in eval_to_possible_answers:
+                eval_to_possible_answers[eval_result] = [answer]
+            else:
+                eval_to_possible_answers[eval_result].append(answer)
+        avg_filter_count = sum(
+            [len(words_for_this_eval) for words_for_this_eval in eval_to_possible_answers.values()]) / len(
+            eval_to_possible_answers.values())
+        if avg_filter_count in remaining_words_after_guess:
+            remaining_words_after_guess[avg_filter_count].append(guess)
+        else:
+            remaining_words_after_guess[avg_filter_count] = [guess]
+    keys = list(remaining_words_after_guess.keys())
+    keys.sort()
+    best_answers = []
+    for key in keys[:best_x_words]:
+        best_answers += remaining_words_after_guess[key]
+    return best_answers
+
+
+def find_most_frequent(options):
+    word_freq = get_word_frequencies()
+    zipped_freqs = list(zip(word_freq.values(), word_freq.keys()))
+    zipped_freqs.sort()
+    sorted_words = [word for freq, word in zipped_freqs]
+    sorted_options = list(filter(lambda word: word in options, sorted_words))
+    return sorted_options[-1]

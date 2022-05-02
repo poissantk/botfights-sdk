@@ -295,6 +295,18 @@ def play_bots(bots, wordlist, wordlist_secrets, n):
     return n
 
 
+
+def play_all_words(bots, wordlist, wordlist_secrets):
+    total_guesses = {}
+    total_time = {}
+    last_guesses = {}
+    bot_keys = sorted(list(bots.keys()))
+    for i in bot_keys:
+        total_guesses[i] = 0
+        total_time[i] = 0.0
+    wordlist_secrets_as_list = sorted(list(wordlist_secrets))
+
+
 def play_human(secret, wordlist):
     guess_num = 0
     guess = '-' * len(secret)
@@ -347,6 +359,7 @@ def play_botfights(bot, username, password, event):
             break
 
 
+
 def main(argv):
     if 0 == len(argv):
         print(USAGE)
@@ -387,7 +400,7 @@ def main(argv):
         x = play_bots({argv[2]: bot}, wordlist, wordlist_secrets, n)
         return x
     elif 'katiebot' == c:
-        fn_wordlist = "katieswordlist.txt"
+        fn_wordlist = "data/katiewordlist.txt"
         bot = load_bot(argv[2])
         n = 0
         if 4 <= len(argv):
