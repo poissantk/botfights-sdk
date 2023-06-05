@@ -1,6 +1,8 @@
 # botfights-sdk
 SDK for botfights
 
+Used AI constraint problems to create and optimize a program to solve wordle.
+
 # CS4100 Final Project
 To run our bot using the final algorithm:
 1. Enter the wordle/python folder
